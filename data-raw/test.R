@@ -5,6 +5,7 @@ resultats <- function( x ){
     filter( str_detect(str_to_lower(Nom), x) ) %>%
     mutate( group = as.numeric(Resultat)) %>%
     summarise(
+      name        = x,
       rattrapage  = 100 * sum(group == 1 ) / n() ,
       admis       = 100 * sum(group >= 2 ) / n(),
       mention_ab  = 100 * sum(group >= 3 ) / n(),
@@ -13,7 +14,6 @@ resultats <- function( x ){
     )
 
 }
-resultats( "Romain" )
-resultats( "Diane" )
-resultats( "Colin" )
-resultats( "Vincent" )
+
+thinkrs <- c("Vincent", "Diane", "Romain", "Colin")
+map_df( thinkrs, resultats )
