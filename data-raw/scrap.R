@@ -3,7 +3,8 @@ library(dplyr)
 library(tidyr)
 library(purrr)
 library(stringr)
-library(plyr)
+
+llply <- plyr::llply
 
 links <- read_html("http://www.letudiant.fr/resultat/bac.html") %>%
   html_nodes("li.c-list--dotted__item a")
@@ -51,7 +52,8 @@ data3 <- unnest( data2 ) %>%
     famille = str_to_title(str_replace( Nom, "[^[:space:]]+$", "" ) ),
     prenoms = str_to_title(str_replace( Nom, "^[^[:space:]]+[[:space:]]", "" )),
     prenom  = str_replace( prenoms, "^[^[:space:]]+[[:space:]]", "" )
-  )
+  ) %>%
+  rename( Resultat = `Résultat`, Etablissement = `Établissement` )
 
 bac2017 <- data3
 use_data( bac2017, overwrite = TRUE )
