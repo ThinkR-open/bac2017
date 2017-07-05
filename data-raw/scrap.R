@@ -64,81 +64,21 @@ clean_ville <- function(ville){
     str_replace_all( " S ", " Sur " )
 }
 
-data3 <- unnest( data2 ) %>%
+data4 <- unnest( data2 ) %>%
   rename( Resultat = `Résultat`, Etablissement = `Établissement` ) %>%
   mutate(
     ville = str_replace_all( str_to_title( str_replace( Etablissement, " CEDEX.*$", "") ), " ", "-" ),
-    nom_split = str_split(Noms, "[[:space:]]" ),
-    famille = str_to_title( map_chr(nom_split, 1) ),
-    prenom  = str_to_title( map_chr(nom_split, 2) )
+    Nom = str_to_title( Nom )
   ) %>%
-  select( -url ) %>%
-  mutate(
-    ville = clean_ville(ville)
-  )
+  select( -url )
 
-# cas particuliers
-data3$ville[ data3$ville == "Terrasson La Villedi"] <- "Terrasson Lavilledieu"
-data3$ville[ data3$ville == "Bordeaux Fondaudege"] <- "Bordeaux"
-data3$ville[ data3$ville == "Saint Vincent De Tyross"] <- "Saint Vincent De Tyrosse"
-data3$ville[ data3$ville == "Mauleon Soule"] <- "Mauleon"
-data3$ville[ data3$ville == "Cherbourg En Cotentin"] <- "Cherbourg Octeville"
-data3$ville[ data3$ville == "Mortain Bocage"] <- "Mortain"
-data3$ville[ data3$ville == "Saint Pierre S Dives"] <- "Saint Pierre Sur Dives"
-data3$ville[ data3$ville == "Cergy Le Haut"] <- "Cergy"
-data3$ville[ data3$ville == "Cergy Pontoise"] <- "Cergy"
-data3$ville[ data3$ville == "Les Ulis Ville"] <- "Les Ulis"
-data3$ville[ data3$ville == "Limours"] <- "Limours En Hurepoix"
-data3$ville[ data3$ville == "La Queue Lez Yvelines"] <- "La Queue Les Yvelines"
-data3$ville[ data3$ville == "Cesson Vert Saint Denis"] <- "Vert Saint Denis"
-data3$ville[ data3$ville == "Pecq Sur Seine"] <- "Le Pecq"
-data3$ville[ data3$ville == "Chalon Saone"] <- "Chalon Sur Saone"
-data3$ville[ data3$ville == "Chatillon Seine"] <- "Chatillon Sur Seine"
-data3$ville[ data3$ville == "Cosne Sur Loire"] <- "Cosne Cours Sur Loire"
-data3$ville[ data3$ville == "Saint Julien En Genevois Cede"] <- "Saint Julien En Genevois"
-data3$ville[ data3$ville == "La Mure D Isere"] <- "La Mure"
-data3$ville[ data3$ville == "Thonon"] <- "Thonon Les Bains"
-data3$ville[ data3$ville == "Le Pont De Beauvoisin"] <- "Pont De Beauvoisin"
-data3$ville[ data3$ville == "Bourgoin Jallieu"] <- "Bourgoin"
-data3$ville[ data3$ville == "Villefranche Saone"] <- "Villefranche Sur Saone"
-data3$ville[ data3$ville == "Charbonnieres Les Ba"] <- "Charbonnieres Les Bains"
-data3$ville[ data3$ville == "Bellegarde Valserine"] <- "Bellegarde Sur Valserine"
-data3$ville[ data3$ville == "Villeneuve Avignon" ] <- "Villeneuve Les Avignon"
-data3$ville[ data3$ville == "Saint Die Des Vosges" ] <- "Saint Die"
-data3$ville[ data3$ville == "La Baule" ] <- "Baule"
-data3$ville[ data3$ville == "Chemille En Anjou" ] <- "Chemille"
-data3$ville[ data3$ville == "Machecoul Saint Meme" ] <- "Machecoul"
-data3$ville[ data3$ville == "Saint Sebastien Loire" ] <- "Saint Sebastien Sur Loire"
-data3$ville[ data3$ville == "Saintes Air" ] <- "Saintes"
-data3$ville[ data3$ville == "Bagneres De Big" ] <- "Bagneres De Bigorre"
+villes <- pull(data4, ville)
 
+xx <- map_df( villes, ~ geocode(.) %>% filter( country == "France", osm_value %in% c("city", "town", "village") ) %>% head(1) )
+xx <- select( xx, location, postcode, state, osm_value, lon, lat)
 
-communes <- as_tibble(read.csv2( "data-raw/eucircos_regions_departements_circonscriptions_communes_gps.csv", stringsAsFactors = FALSE)) %>%
-  rename(
-    nom_departement = `nom_département`,
-    numero_departement = `numéro_département`,
-    ville = nom_commune
-  ) %>%
-  select( nom_departement, numero_departement, ville, latitude, longitude ) %>%
-  mutate( ville = clean_ville(ville) )
-communes$ville[ communes$ville == "Domfront" & communes$numero_departement == "60" ] <- "Domfront En Poiraie"
-communes$ville[ communes$ville == "Vire" & communes$numero_departement == "14" ] <- "Vire Normandie"
-communes$ville[ communes$ville == "Carentan" & communes$numero_departement == "50" ] <- "Carentan Les Marais"
-communes$ville[ communes$ville == "Conde Sur Noireau" & communes$numero_departement == "14" ] <- "Conde En Normandie"
-communes$ville[ communes$ville == "Torcy" & communes$numero_departement == "77" ] <- "Torcy Marne La Vallee"
-communes$ville[ communes$ville == "Teil (Le)" ] <- "Le Teil"
-communes$ville[ communes$ville == "Cheylard (Le)" ] <- "Le Cheylard"
-
-setdiff( unique(data3$ville), communes$ville )
-filter( communes, grepl("Terrasson", ville))
-
-communes <- distinct( communes, ville, .keep_all = TRUE )
-
-bac2017 <- left_join( data3, communes, by = "ville") %>%
-  mutate(
-    latitude = as.numeric(latitude),
-    longitude = as.numeric(longitude)
-  )
+bac2017 <- left_join( data4, xx, by = c( ville = "location"))
+bac2017 <- mutate( bac2017, postcode = map_chr(str_split(postcode, ";"), 1 ) )
 
 use_data( bac2017, overwrite = TRUE )
 
