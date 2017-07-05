@@ -79,6 +79,13 @@ xx <- select( xx, location, postcode, state, osm_value, lon, lat)
 
 bac2017 <- left_join( data4, xx, by = c( ville = "location"))
 bac2017 <- mutate( bac2017, postcode = map_chr(str_split(postcode, ";"), 1 ) )
+bac2017 <- mutate( bac2017, dpt = substr(postcode, 1, 2) )
+
+levels <- c("PASSE SECOND GROUPE", "ADMIS", "ADMIS MENTION ASSEZ BIEN", "ADMIS MENTION BIEN", "ADMIS MENTION TRES BIEN")
+bac2017 <- mutate( bac2017,
+  Resultat = factor( Resultat, levels = levels ),
+  group = as.numeric(Resultat)
+)
 
 use_data( bac2017, overwrite = TRUE )
 
