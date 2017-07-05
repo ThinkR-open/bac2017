@@ -72,7 +72,7 @@ data3 <- unnest( data2 ) %>%
     prenom  = str_to_title(str_replace( prenoms, "[[:space:]][^[:space:]]+$", "" ) )
   ) %>%
   rename( Resultat = `Résultat`, Etablissement = `Établissement` ) %>%
-  select( -url, -Nom) %>%
+  select( -url ) %>%
   mutate(
     ville = clean_ville(ville)
   )
