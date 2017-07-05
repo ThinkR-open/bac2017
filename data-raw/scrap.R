@@ -65,13 +65,13 @@ clean_ville <- function(ville){
 }
 
 data3 <- unnest( data2 ) %>%
-  mutate(
-    ville = str_replace_all( str_to_title( str_replace( Établissement, " CEDEX.*$", "") ), " ", "-" ),
-    famille = str_to_title(str_replace( Nom, "[^[:space:]]+$", "" ) ),
-    prenoms = str_to_title(str_replace( Nom, "^[^[:space:]]+[[:space:]]", "" )),
-    prenom  = str_to_title(str_replace( prenoms, "[[:space:]][^[:space:]]+$", "" ) )
-  ) %>%
   rename( Resultat = `Résultat`, Etablissement = `Établissement` ) %>%
+  mutate(
+    ville = str_replace_all( str_to_title( str_replace( Etablissement, " CEDEX.*$", "") ), " ", "-" ),
+    nom_split = str_split(Noms, "[[:space:]]" ),
+    famille = str_to_title( map_chr(nom_split, 1) ),
+    prenom  = str_to_title( map_chr(nom_split, 2) )
+  ) %>%
   select( -url ) %>%
   mutate(
     ville = clean_ville(ville)
