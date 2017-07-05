@@ -3,6 +3,7 @@ library(dplyr)
 library(tidyr)
 library(purrr)
 library(stringr)
+library(photon)
 
 llply <- plyr::llply
 
@@ -46,14 +47,22 @@ data2 <- map2_df( data$href, data$academie, resultat_academie)
 res <- llply( data2$url, resultat, .progress = "text" )
 data2$data <- res
 
-data3 <- unnest( data2 ) %>%
+bac2017 <- unnest( data2 ) %>%
   mutate(
-    ville = str_to_title( str_replace( Établissement, " CEDEX.*$", "") ),
+    ville = str_replace_all( str_to_title( str_replace( Établissement, " CEDEX.*$", "") ), " ", "-" ),
     famille = str_to_title(str_replace( Nom, "[^[:space:]]+$", "" ) ),
     prenoms = str_to_title(str_replace( Nom, "^[^[:space:]]+[[:space:]]", "" )),
     prenom  = str_replace( prenoms, "^[^[:space:]]+[[:space:]]", "" )
   ) %>%
   rename( Resultat = `Résultat`, Etablissement = `Établissement` )
 
-bac2017 <- data3
+cities <- unique(bac2017$ville)
+x <- geocode(cities, limit = 1, quiet = TRUE)
+
+bac2017 <- left_join( bac2017, x, by = c("ville" = "location") ) %>%
+  select(-housenumber, -street, -city, -country, -osm_key, -msg)
+
 use_data( bac2017, overwrite = TRUE )
+
+
+
