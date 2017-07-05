@@ -1,9 +1,9 @@
 Package: bac2017
-Title: What the Package Does (one line, title case)
+Title: Resultats du bac 2017
 Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Authors@R: person("Romain", "François", email = "romain@thinkr.fr", role = c("aut", "cre"))
+Description: Resultats du bac 2017. 
 Depends: R (>= 3.4.0)
-License: What license is it under?
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
